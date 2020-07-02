@@ -86,6 +86,7 @@ public class Login extends AppCompatActivity implements GoogleApiClient.OnConnec
     DatabaseReference mdatafirebaselogin, mdatafirebasex;
     FirebaseStorage storage = FirebaseStorage.getInstance();
     static  String  sdt  ,sID;
+    static boolean bCheckUser = false;
     private  static  final int RC_CODE = 9001;
      int counte = 0;
     @Override
@@ -120,8 +121,6 @@ public class Login extends AppCompatActivity implements GoogleApiClient.OnConnec
 
         ///
         //facebook login
-//          SignOut FACCEBOOK
-//        disconnectFromFacebook();
         FacebookSdk.sdkInitialize(getApplicationContext());
         callbackManager = CallbackManager.Factory.create();
         AppEventsLogger.activateApp(this);
@@ -154,24 +153,6 @@ public class Login extends AppCompatActivity implements GoogleApiClient.OnConnec
 
     }
 
-    public void disconnectFromFacebook() {
-
-        if (AccessToken.getCurrentAccessToken() == null) {
-            return; // already logged out
-        }
-
-        new GraphRequest(AccessToken.getCurrentAccessToken(), "/me/permissions/", null, HttpMethod.DELETE, new GraphRequest
-                .Callback() {
-            @Override
-            public void onCompleted(GraphResponse graphResponse) {
-
-                LoginManager.getInstance().logOut();
-
-            }
-        }).executeAsync();
-    }
-
-
     private void addProfile(String key, String avatar, String email, String name, String phone){
         final ProfileUser profileUser = new ProfileUser(avatar,email,name,phone);
         mdatafirebaselogin.child("profileuser/"+key).setValue(profileUser);
@@ -202,20 +183,50 @@ public class Login extends AppCompatActivity implements GoogleApiClient.OnConnec
         super.onActivityResult(requestCode, resultCode, data);
         // login google
         if (requestCode == RC_CODE) {
-
-            Log.d("Login", "3333333");
             Task<GoogleSignInAccount> taskGogole = GoogleSignIn.getSignedInAccountFromIntent(data);
             handleSignInResult(taskGogole);
         }
     }
+    public void checkUserAdd (final String id, final String savatar, final String semail, final String sname, final String sphone){
+        mdatafirebasex = FirebaseDatabase.getInstance().getReference().child("profileuser").child(id);
+        mdatafirebasex.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 
+                ProfileUser profileUser = dataSnapshot.getValue(ProfileUser.class);
+                if (profileUser == null){
+                    // add profile
+                    addProfile(id,savatar,semail,sname,sphone);
+                    mdatafirebasex.removeEventListener(this);
+                    bCheckUser= true;
+                }else {
+                    /// profile giữa SDT
+                    addProfile(id,savatar,semail,sname,profileUser.Phonenumber);
+                    mdatafirebasex.removeEventListener(this);
+                    bCheckUser= true;
+                }
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+    }
 
     private void handleSignInResult(Task<GoogleSignInAccount> completedTask) {
         try {
             GoogleSignInAccount accountGoogle = completedTask.getResult(ApiException.class);
             updateUIGoogle(accountGoogle);
+            // check uer & add profile
 
-            Log.d("Login", "444444444");
+            checkUserAdd(accountGoogle.getId(),accountGoogle.getPhotoUrl().toString(),accountGoogle.getEmail(),accountGoogle.getDisplayName()
+                                        ,"");
+            // chuyển Activity
+
+                TosendActivity(accountGoogle.getId()+"");
+
         } catch (ApiException e) {
             Log.w("qqq", "signInResult:failed code=" + e.getStatusCode());
             updateUIGoogle(null);
@@ -287,10 +298,26 @@ public class Login extends AppCompatActivity implements GoogleApiClient.OnConnec
             }
         });
     }
-    private void TosendActivity (String s){
-        Intent intent = new Intent(this, MainActivity.class);
-        intent.putExtra("KeyID",s);
-        startActivity(intent);
+    private void TosendActivity (final String id){
+        final Intent intent = new Intent(this, MainActivity.class);
+        intent.putExtra("KeyID",id);
+        T=new Timer();
+        T.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                runOnUiThread(new Runnable()
+                {
+                    @Override
+                    public void run()
+                    {countime++;
+                        if (countime==1 ){
+                            startActivity(intent);
+                            T.cancel();
+                        }
+                    }
+                });
+            }
+        }, 1000, 1000);
     }
     ////////// sự kiện
     public void eventlick (View view) {
@@ -405,44 +432,27 @@ public class Login extends AppCompatActivity implements GoogleApiClient.OnConnec
             public void onCompleted(final JSONObject object, GraphResponse response) {
                 Log.d("profile", response.getJSONObject().toString());
                 getProfile(Profile.getCurrentProfile().getId());
-                T=new Timer();
-                T.scheduleAtFixedRate(new TimerTask() {
-                    @Override
-                    public void run() {
-                        runOnUiThread(new Runnable()
-                        {
-                            @Override
-                            public void run()
-                            {countime++;
-                                if (countime==1 ){
-
-                                    if (sdt=="") {
-                                        try {
-                                            last_name = object.getString("last_name");
-                                        } catch (JSONException e) {
-                                            e.printStackTrace();
-                                        }
-                                        try {
-                                            email = object.getString("email");
-                                        } catch (JSONException e) {
-                                            e.printStackTrace();
-                                        }
-                                        id = Profile.getCurrentProfile().getId();
-                                        linkavatar = "https://graph.facebook.com/" +id+ "/picture?type=large";
-                                        addProfile(id,linkavatar,email,last_name,"");
-                                        TosendActivity(Profile.getCurrentProfile().getId());
-                                        T.cancel();
-                                    }else
-                                    {
-                                        TosendActivity(Profile.getCurrentProfile().getId());
-                                        T.cancel();
-                                    }
-
-                                }
-                            }
-                        });
+                if (sdt=="") {
+                    try {
+                        last_name = object.getString("last_name");
+                    } catch (JSONException e) {
+                        e.printStackTrace();
                     }
-                }, 1000, 1000);
+                    try {
+                        email = object.getString("email");
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                    id = Profile.getCurrentProfile().getId();
+                    linkavatar = "https://graph.facebook.com/" +id+ "/picture?type=large";
+                    addProfile(id,linkavatar,email,last_name,"");
+                    TosendActivity(Profile.getCurrentProfile().getId());
+                    T.cancel();
+                }else
+                {
+                    TosendActivity(Profile.getCurrentProfile().getId());
+
+                }
             }
         });
         Bundle parameters = new Bundle();
