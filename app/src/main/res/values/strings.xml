@@ -1,0 +1,175 @@
+<resources>
+    <string name="app_name">AppEnd</string>
+    <string name="facebook_app_id">232422018105563</string>
+    <string name="fb_login_protocol_scheme">fb232422018105563</string>
+    <string name="key_google_maps">AIzaSyDATmupzUuS_MI8lHKB6ZDBxhHIwzbyGEo</string>
+
+    <string-array name="ListThanhPho">
+        <item>Tất cả</item>
+        <item>Tp.Hồ Chí Minh</item>
+    </string-array>
+
+    <string-array name="ListLoaixe">
+        <item>Tất cả</item>
+        <item>Xe Tải</item>
+        <item>Xe Bán Tải</item>
+        <item>Xe 3 Gác</item>
+        <item>Xe Máy</item>
+    </string-array>
+    <string-array name="ListLoaixeAuto">
+        <item>Xe Tải</item>
+        <item>Xe Bán Tải</item>
+        <item>Xe 3 Gác</item>
+        <item>Xe Máy</item>
+    </string-array>
+    <string-array name="ChonTrongTai">
+        <item>Chọn trọng tải</item>
+    </string-array>
+
+    <string-array name="ListTrongTaiXeTai">
+        <item>Tất cả</item>
+        <item>7 Tấn</item>
+        <item>5 Tấn</item>
+        <item>3 Tấn</item>
+        <item>1 Tấn</item>
+    </string-array>
+    <string-array name="ListTrongTaiXeTaiAuto">
+        <item>7 Tấn</item>
+        <item>5 Tấn</item>
+        <item>3 Tấn</item>
+        <item>1 Tấn</item>
+    </string-array>
+
+    <string-array name="ListTrongTaiXeBanTai">
+        <item>1 Tấn</item>
+    </string-array>
+    <string-array name="ListAll">
+        <item>Tất cả</item>
+    </string-array>
+    <string-array name="ListTrongTaiXe3Gac">
+        <item>500 KG</item>
+    </string-array>
+    <string-array name="ListTrongTaiXeMay">
+        <item>100 KG</item>
+    </string-array>
+    <string-array name="ListPhuongQuan1HCM">
+        <item>Tất cả</item>
+        <item>Bến Nghé</item>
+        <item>Bến Thành</item>
+        <item>Cô Giang</item>
+        <item>Cầu Kho</item>
+        <item>Cầu Ông Lãnh</item>
+        <item>Đa Kao</item>
+        <item>Nguyễn Cư Trinh</item>
+        <item>Nguyễn Thái Bình</item>
+        <item>Phạm Ngũ Lão</item>
+        <item>Tân Định</item>
+    </string-array>
+    <string-array name="ListQuanHCM">
+        <item>Tất cả</item>
+        <item>Quận 1</item>
+        <item>Quận 2</item>
+        <item>Quận 3</item>
+        <item>Quận 4</item>
+        <item>Quận 5</item>
+        <item>Quận 6</item>
+        <item>Quận 7</item>
+    </string-array>
+    <string-array name="ListPhuongQuan2HCM">
+        <item>Tất cả</item>
+        <item>An Khánh</item>
+        <item>An Phú</item>
+        <item>An Lợi Đông</item>
+        <item>Bình An</item>
+        <item>Bình Khánh</item>
+        <item>Bình Trưng Đông</item>
+        <item>Bình Trưng Tây</item>
+        <item>Cát Lái</item>
+        <item>Thành Mỹ Lợi</item>
+        <item>Thảo Điền</item>
+        <item>Thủ Thiên</item>
+    </string-array>
+    <string-array name="ListPhuongQuan3HCM">
+        <item>Tất cả</item>
+        <item>Phường 1</item>
+        <item>Phường 2</item>
+        <item>Phường 3</item>
+        <item>Phường 4</item>
+        <item>Phường 5</item>
+        <item>Phường 6</item>
+        <item>Phường 7</item>
+        <item>Phường 8</item>
+        <item>Phường 9</item>
+        <item>Phường 10</item>
+        <item>Phường 11</item>
+        <item>Phường 12</item>
+        <item>Phường 13</item>
+        <item>Phường 14</item>
+    </string-array>
+    <string-array name="ListPhuongQuan4HCM">
+        <item>Tất cả</item>
+        <item>Phường 1</item>
+        <item>Phường 2</item>
+        <item>Phường 3</item>
+        <item>Phường 4</item>
+        <item>Phường 5</item>
+        <item>Phường 6</item>
+        <item>Phường 8</item>
+        <item>Phường 9</item>
+        <item>Phường 10</item>
+        <item>Phường 12</item>
+        <item>Phường 13</item>
+        <item>Phường 14</item>
+        <item>Phường 15</item>
+        <item>Phường 16</item>
+        <item>Phường 18</item>
+    </string-array>
+    <string-array name="ListPhuongQuan5HCM">
+        <item>Tất cả</item>
+        <item>Phường 1</item>
+        <item>Phường 2</item>
+        <item>Phường 3</item>
+        <item>Phường 4</item>
+        <item>Phường 5</item>
+        <item>Phường 6</item>
+        <item>Phường 7</item>
+        <item>Phường 8</item>
+        <item>Phường 9</item>
+        <item>Phường 10</item>
+        <item>Phường 11</item>
+        <item>Phường 12</item>
+        <item>Phường 13</item>
+        <item>Phường 14</item>
+        <item>Phường 15</item>
+    </string-array>
+    <string-array name="ListPhuongQuan6HCM">
+        <item>Tất cả</item>
+        <item>Phường 1</item>
+        <item>Phường 2</item>
+        <item>Phường 3</item>
+        <item>Phường 4</item>
+        <item>Phường 5</item>
+        <item>Phường 6</item>
+        <item>Phường 7</item>
+        <item>Phường 8</item>
+        <item>Phường 9</item>
+        <item>Phường 10</item>
+        <item>Phường 11</item>
+        <item>Phường 12</item>
+        <item>Phường 13</item>
+        <item>Phường 14</item>
+    </string-array>
+    <string-array name="ListPhuongQuan7HCM">
+        <item>Tất cả</item>
+        <item>Bình Thuận</item>
+        <item>Phú Thuận</item>
+        <item>Phú Mỹ</item>
+        <item>Tân Hưng</item>
+        <item>Tân Kiểng</item>
+        <item>Tân phong</item>
+        <item>Tân Phú</item>
+        <item>Tân Quý</item>
+        <item>Tân Thuận Đông</item>
+        <item>Tân Thuận Tây</item>
+    </string-array>
+</resources>
