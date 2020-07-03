@@ -48,6 +48,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -58,6 +59,7 @@ import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import java.text.NumberFormat;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -69,7 +71,7 @@ import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 public class MainActivity extends AppCompatActivity  implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks
         ,GoogleApiClient.OnConnectionFailedListener,
         LocationListener, GoogleMap.OnMarkerDragListener
-        ,GoogleMap.OnMarkerClickListener, GoogleMap.OnMyLocationClickListener , GoogleMap.OnMyLocationButtonClickListener {
+        ,GoogleMap.OnMarkerClickListener, GoogleMap.OnMyLocationClickListener, GoogleMap.OnMyLocationButtonClickListener {
 
     Spinner spTinhSearch, spquanSearch ,spPhuongSearch ,spLoaixeSearch,spLoaixeSearchAuto, sptrongtaiSearch, sptrongtaiSearchAuto;
 
@@ -79,13 +81,13 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
 
     ConstraintLayout ContrainLayout153,layoutsearch ;
 
-    LinearLayout LinearTimThuCong ,LinearTransport,LinearHome156,linearLayout9, LinearTimTheoID, LinearTimTuDong,LinearMapTestLocation
+    LinearLayout LinearTimThuCong,LinearEND ,LinearTransport,LinearHome156,linearLayout9, LinearTimTheoID, LinearTimTuDong,LinearMapTestLocation
             ,LinearAddLocationBus,LinearDetail,LinearAdd,LinearDetailLocation;
 
     static  ArrayList<Bus> mangBus = new ArrayList<Bus>();
     public static  ArrayList<HistoryTransport> mangHistory = new ArrayList<HistoryTransport>();
 
-    TextView txtIDBusDetaildialog, txtNameBusDialog, txtLocationBusDialog, txtLoaiXeBusDialog,
+    TextView txtIDBusDetaildialog,txtloatxe1,txttt1,txtSDTTran,txtChiPhiDialog, txtNameBusDialog, txtLocationBusDialog, txtLoaiXeBusDialog,
             txtTrongTaiBusDialog, txtSDTBusDialog,txtPointBusDialog,txtDetailBeginSearch
             ,txtDetailEndSearch,txtDetailLocationBegin,
             txtDetailLocationEnd,txtDetailLocationVND,txtPhiVanChuyenSearch;
@@ -122,10 +124,8 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
     /// google maps API
    static int status = 0 ,keyhistory,statusCheckBegin = 0,statusCheckEnd = 0,countsearch=0,countime;
     static String sTimeNow = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(new Date());
-
+    static   int countimes = 0;
     private static GoogleMap mMap;
-    private static GoogleMap mMapTest;
-    private static GoogleMap mMapLocation;
     public  double  x = 10.807453,y=106.7157249 ,end_x,end_y ,yend;
     public static float  numberKm = 0;
     private FusedLocationProviderClient client;
@@ -149,8 +149,11 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
                 .findFragmentById(R.id.mapTestlocation);
         mapFragmentBus = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.mapTran);
-        mapFragmentBus.getMapAsync(MainActivity.this);
+
         mapTest.getMapAsync(this);
+        mapFragmentBus.getMapAsync(MainActivity.this);
+
+        client = LocationServices.getFusedLocationProviderClient(this);
         mdatafiresetprofile= FirebaseDatabase.getInstance().getReference();
         mdatafiresetGetlocationBus= FirebaseDatabase.getInstance().getReference();
         dialogloading = new Dialog(this);
@@ -166,7 +169,6 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
         getProfileUser(sID);
         onlick();
         ///// google maps APi
-        client = LocationServices.getFusedLocationProviderClient(this);
         loadSpinner();
         ///
         fragment = new FragmentHome();
@@ -178,7 +180,31 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
         evenlistview();
         DialogDetailBus();
         listHistory(sID);
+
+
     }
+    // get SDT bus
+    private void SDTBUS (String id){
+        mdatafirebasex= FirebaseDatabase.getInstance().getReference().child("profileuser").child(id);
+        mdatafirebasex.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                try {
+                    ProfileUser profile = dataSnapshot.getValue(ProfileUser.class);
+                    txtSDTBusDialog.setText(profile.Phonenumber);
+                    mdatafirebasex.removeEventListener(this);
+                }catch (Exception e){
+                    txtSDTBusDialog.setText("Chưa bổ sung SĐT");
+                }
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+    }
+
+
     // list Histpry
     public void listHistory(final String id){
 //        final FragmentUser fragmentUser = (FragmentUser) getFragmentManager().findFragmentById(R.id.FramContent);
@@ -264,7 +290,8 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
     // gửi yếu cầu
     private void SendAccuracy(String sidUser , String sidBus,String slocationBegin,String slocationEnd,String sCost,
                               String sLatBegin,String sLatEnd,String sLongbegin,String sLongEnd  ){
-        final Accuracy accuracy = new Accuracy(sCost,sidUser,sLatBegin,sLatEnd,slocationBegin,slocationEnd,sLongbegin,sLongEnd,"5" );
+        final Accuracy accuracy = new Accuracy(sCost,sidUser,sLatBegin,sLatEnd,slocationBegin,
+                slocationEnd,sLongbegin,sLongEnd,"5" );
         mdatafiresetprofile.child("Accuracy/"+sidBus).setValue(accuracy);
     }
         /// kiem tra cái google map nay
@@ -282,34 +309,34 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
                 }
                 LatLng sydney = new LatLng(a,b );
                 if (bussss.loaiXe.equals("Xe Tải")){
-                    mMarkerBus = mMapTest.addMarker(new MarkerOptions()
+                    mMarkerBus = mMap.addMarker(new MarkerOptions()
                             .position(sydney)
                             .title("Đang di chuyển" )
                             .snippet(""+sPhone)
                             .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_markerxetai)));
-                    mMapTest.animateCamera(CameraUpdateFactory.newLatLngZoom(sydney,15));
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(sydney,15));
                 }else if (bussss.loaiXe.equals("Xe Bán Tải")){
-                    mMarkerBus = mMapTest.addMarker(new MarkerOptions()
+                    mMarkerBus = mMap.addMarker(new MarkerOptions()
                             .position(sydney)
                             .title("Đang di chuyển" )
                             .snippet(""+sPhone)
                             .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_markerxebantai)));
-                    mMapTest.animateCamera(CameraUpdateFactory.newLatLngZoom(sydney,15));
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(sydney,15));
                 }else if (bussss.loaiXe.equals("Xe 3 Gác")){
 
-                    mMarkerBus = mMapTest.addMarker(new MarkerOptions()
+                    mMarkerBus = mMap.addMarker(new MarkerOptions()
                             .position(sydney)
                             .title("Đang di chuyển" )
                             .snippet(""+sPhone)
                             .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_markerxe3gac)));
-                    mMapTest.animateCamera(CameraUpdateFactory.newLatLngZoom(sydney,15));
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(sydney,15));
                 }else  if (bussss.loaiXe.equals("Xe Máy")){
-                    mMarkerBus = mMapTest.addMarker(new MarkerOptions()
+                    mMarkerBus = mMap.addMarker(new MarkerOptions()
                             .position(sydney)
                             .title("Đang di chuyển" )
                             .snippet(""+sPhone)
                             .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_markerxemay)));
-                    mMapTest.animateCamera(CameraUpdateFactory.newLatLngZoom(sydney,15));
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(sydney,15));
                 }
             }
             @Override
@@ -327,7 +354,7 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
                 double a  = Double.parseDouble(ac.LatBeginAccuracy);
                 double b  = Double.parseDouble(ac.LongBeginAccuracy);
                 LatLng sydney1 = new LatLng(a,b );
-                mMe = mMapTest.addMarker(new MarkerOptions()
+                mMe = mMap.addMarker(new MarkerOptions()
                         .position(sydney1)
                         .title("Điểm bắt đầu" )
                         .snippet(ac.LocationBeginAccuracy)
@@ -335,7 +362,7 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
                 a  = Double.parseDouble(ac.LatEndAccuracy );
                  b  = Double.parseDouble(ac.LongEndAccuracy );
                 LatLng ew = new LatLng(a,b );
-                mMe = mMapTest.addMarker(new MarkerOptions()
+                mMe = mMap.addMarker(new MarkerOptions()
                         .position(ew)
                         .title("Điểm kết thúc")
                         .snippet(ac.LocationEndAccuracy)
@@ -349,21 +376,21 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
             }
         });
     }
-    // tính khoản cách
-
     private void range(){
         // double latBegin,double longBegin,double latEnd, double longEnd
-        float resul[] = new float[10];
+
         // kiểm tra mylocation có gia tri không
-        if (dMyLatitude==0){
-             Location.distanceBetween(dLatBegin,dLoBegin,dLatEnd,dLoEnd,resul);
-            txtPhiVanChuyenSearch.setText( resul[0]+"");
-        }else if (dLatEnd==0){
-            Location.distanceBetween(dMyLatitude,dMyLongitude,dLatBegin,dLoBegin,resul);
-            txtPhiVanChuyenSearch.setText( resul[0]+"");
-        }else if (dLatBegin==0){
-            Location.distanceBetween(dMyLatitude,dMyLongitude,dLatEnd,dLoEnd,resul);
-            txtPhiVanChuyenSearch.setText( resul[0]+"");
+        if (edtLocationBegin.getText().toString().equals("Vị trí hiện tại")
+                        ||edtLocationEnd.getText().toString().equals("Vị trí hiện tại")){
+            float resul[] = new float[10];
+             Location.distanceBetween(dMyLatitude,dMyLongitude,dLatEnd,dLoEnd,resul);
+            int a = (int) (resul[0]+(resul[0]*0.36));
+            txtPhiVanChuyenSearch.setText(  a+""  );
+        }else  {
+            float resuls[] = new float[10];
+            Location.distanceBetween(dLatBegin,dLoBegin,dLatEnd,dLoEnd,resuls);
+            int a = (int) (resuls[0]+(resuls[0]*0.36));
+            txtPhiVanChuyenSearch.setText(  a+""  );
         }
     }
 
@@ -371,7 +398,7 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
     private void choXacNhan(final String id){
         dialogloading.show();
         getXacThuc(id);
-
+        countime = 0;
         TIME =new Timer();
         TIME.scheduleAtFixedRate(new TimerTask() {
             @Override
@@ -430,11 +457,31 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
                     txtDetailLocationBegin.setText(edtLocationBegin.getText().toString());
                     ramdom();
                     savehistoryTransport(keyhistory,sID,"0",accuracy.CostAccuracy,sTimeNow,dataSnapshot.getKey(),
-                            sID,accuracy.LocationBeginAccuracy,accuracy.LocationEndAccuracy,txtLoaiXeBusDialog.getText().toString()
-                            ,"Đang cận chuyển",txtTrongTaiBusDialog.getText().toString() );
+                            sID,accuracy.LocationBeginAccuracy,accuracy.LocationEndAccuracy,txtloatxe1.getText().toString()
+                            ,"Đang cận chuyển",txttt1.getText().toString() );
                     savehistoryTransport(keyhistory,dataSnapshot.getKey(),"1",accuracy.CostAccuracy,sTimeNow,dataSnapshot.getKey(),
-                            sID,accuracy.LocationBeginAccuracy,accuracy.LocationEndAccuracy,txtLoaiXeBusDialog.getText().toString()
-                            ,"Đang cận chuyển",txtTrongTaiBusDialog.getText().toString() );
+                            sID,accuracy.LocationBeginAccuracy,accuracy.LocationEndAccuracy,txtloatxe1.getText().toString()
+                            ,"Đang cận chuyển",txttt1.getText().toString() );
+                    mdatafirebasex= FirebaseDatabase.getInstance().getReference().child("Bus").child(txtIDBusDetaildialog.getText().toString());
+                    mdatafirebasex.addValueEventListener(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                            try {
+                                Bus a = dataSnapshot.getValue(Bus.class);
+                                Bus bus = new Bus(a.Phuong,a.Quan,a.Ten,a.Tinh,a.diem
+                                        ,a.iduser,a.loaiXe,a.soxe,"0",a.trongtai,a.viTrix,a.viTriy );
+                                mdatafiresetprofile.child("Bus/"+a.iduser).setValue(bus);
+                                mdatafirebasex.removeEventListener(this);
+                            }catch (Exception e){
+                                Toast.makeText(MainActivity.this, e+"", Toast.LENGTH_SHORT).show();
+                                mdatafirebasex.removeEventListener(this);
+                            }
+                        }
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                        }
+                    });
                     statusTranBus = true;
                     mdatafirebaseAccuracy.removeEventListener(this);
                 }else if (accuracy.StatusAccuracy.equals("2")){
@@ -452,6 +499,50 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
                 }else if (accuracy.StatusAccuracy.equals("4")){
                     sstatusAccuracy = dataSnapshot.getValue().toString();
                 }
+
+                countime = 0;
+                TIME =new Timer();
+                TIME.scheduleAtFixedRate(new TimerTask() {
+                    @Override
+                    public void run() {
+                        runOnUiThread(new Runnable()
+                        {
+                            @Override
+                            public void run()
+                            {countime++;
+                                if (countime==10 ){
+                                    mdatafire= FirebaseDatabase.getInstance().getReference().child("Accuracy").child(id);
+                                    mdatafire.addValueEventListener(new ValueEventListener() {
+                                        @Override
+                                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                            Accuracy ac = dataSnapshot.getValue(Accuracy.class);
+                                            Accuracy aec = new Accuracy(
+                                                    ac.CostAccuracy,
+                                                     ac.IDUserSendAccuracy,
+                                                      ac.LatBeginAccuracy,
+                                                       ac.LatEndAccuracy,
+                                                        ac.LocationBeginAccuracy,
+                                                        ac.LocationEndAccuracy,
+                                                        ac.LongBeginAccuracy,
+                                                          ac.LongEndAccuracy ,
+                                                            "6");
+                                            mdatafiresetprofile.child("Accuracy/"+id).setValue(aec);
+                                            mdatafire.removeEventListener(this);
+                                            dialogloading.dismiss();
+                                            Toast.makeText(MainActivity.this, "Quá thời gia phản hồi \n Hãy chọn phương tiện khác", Toast.LENGTH_SHORT).show();
+                                        }
+                                        @Override
+                                        public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                                        }
+
+                                    });
+                                    TIME.cancel();
+                                }
+                            }
+                        });
+                    }
+                }, 1000, 1000);
             }
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
@@ -483,7 +574,7 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
                                         {countime++;
                                             if (countime==2 ){
                                                 LatLng e = new LatLng(dMyLatitude,dMyLongitude );
-                                                mMapTest.animateCamera(CameraUpdateFactory.newLatLngZoom(e,15));
+                                                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(e,15));
                                                 countime=0;
                                                 T.cancel();
                                             }
@@ -507,14 +598,14 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
                     if (statusCheckBegin == 1){
                         dLatBegin = dLat;
                         dLoBegin = dLong;
-                        markerBegin = mMapTest.addMarker(new MarkerOptions().position(e).title( location));
-                        mMapTest.animateCamera(CameraUpdateFactory.newLatLngZoom(e,15));
+                        markerBegin = mMap.addMarker(new MarkerOptions().position(e).title( location));
+                        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(e,15));
                         statusCheckBegin=0;
                     }else if (statusCheckEnd == 1){
                         dLatEnd = dLat;
                         dLoEnd = dLong;
-                        markerEnd = mMapTest.addMarker(new MarkerOptions().position(e).title( location));
-                        mMapTest.animateCamera(CameraUpdateFactory.newLatLngZoom(e,15));
+                        markerEnd = mMap.addMarker(new MarkerOptions().position(e).title( location));
+                        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(e,15));
                         statusCheckEnd=0;
                     }
                 }
@@ -538,7 +629,7 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
                                         {countime++;
                                             if (countime==2 ){
                                                 LatLng e = new LatLng(dMyLatitude,dMyLongitude );
-                                                mMapTest.animateCamera(CameraUpdateFactory.newLatLngZoom(e,15));
+                                                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(e,15));
                                                 countime=0;
                                                 T.cancel();
                                             }
@@ -562,14 +653,14 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
                     if (statusCheckBegin == 1){
                         dLatBegin = dLat;
                         dLoBegin = dLong;
-                        markerBegin = mMapTest.addMarker(new MarkerOptions().position(e).title( location));
-                        mMapTest.animateCamera(CameraUpdateFactory.newLatLngZoom(e,15));
+                        markerBegin = mMap.addMarker(new MarkerOptions().position(e).title( location));
+                        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(e,15));
                         statusCheckBegin=0;
                     }else if (statusCheckEnd == 1){
                         dLatEnd = dLat;
                         dLoEnd = dLong;
-                        markerEnd = mMapTest.addMarker(new MarkerOptions().position(e).title( location));
-                        mMapTest.animateCamera(CameraUpdateFactory.newLatLngZoom(e,15));
+                        markerEnd = mMap.addMarker(new MarkerOptions().position(e).title( location));
+                        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(e,15));
                         statusCheckEnd=0;
                     }
                 }
@@ -584,24 +675,27 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
         btDatXeDialogDetailBus = dialogDetailBus.findViewById(R.id.btDatXeDialogDetailBus);
         txtNameBusDialog = dialogDetailBus.findViewById(R.id.txtDetailNameBus);
         txtLocationBusDialog = dialogDetailBus.findViewById(R.id.txtLocationBusDialog);
-        txtLoaiXeBusDialog = dialogDetailBus.findViewById(R.id.txtLoaiXeBusDialog);
-        txtTrongTaiBusDialog = dialogDetailBus.findViewById(R.id.txtTrongTaiBusDialog);
+        txtChiPhiDialog = dialogDetailBus.findViewById(R.id.txtChiPhiDialog);
+        txtloatxe1 = dialogDetailBus.findViewById(R.id.txtloatxe1);
+        txttt1 = dialogDetailBus.findViewById(R.id.txttt1);
         txtSDTBusDialog = dialogDetailBus.findViewById(R.id.txtSDTBusDialog);
         txtPointBusDialog = dialogDetailBus.findViewById(R.id.txtPointBusDialog);
         btDongdialogDetailBus.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 dialogDetailBus.dismiss();
-//                dialogDetailBus.show();
             }
         });
         btDatXeDialogDetailBus.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                txtDetailLocationVND.setText(txtChiPhiDialog.getText().toString());
+                txtSDTTran.setText(txtSDTBusDialog.getText().toString());
                 if (dLoBegin==0){
                     SendAccuracy(sID,txtIDBusDetaildialog.getText().toString(),
                             txtDetailBeginSearch.getText().toString(),txtDetailEndSearch.getText().toString(),
-                            txtPhiVanChuyenSearch.getText().toString(),dMyLatitude+"",dLatEnd+"",dMyLongitude+"",
+                            txtPhiVanChuyenSearch.getText().toString(),dMyLatitude+"",
+                            dLatEnd+"",dMyLongitude+"",
                             dLoEnd+"");
                 }else if(dLoEnd ==0){
                     SendAccuracy(sID,txtIDBusDetaildialog.getText().toString(),  txtDetailBeginSearch.getText().toString(),txtDetailEndSearch.getText().toString(),
@@ -619,18 +713,45 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
         });
 
     }
+    static int  TinhTien(String loaixe,String trongtai,String km){
+        int m = Integer.parseInt(km);
+        if (loaixe.equals("Xe Tải")){
+            if (trongtai.equals("7 Tấn")){
+                return m*60+100000;
+            }else if (trongtai.equals("5 Tấn")){
+                return m*50+60000;
+            }else if (trongtai.equals("3 Tấn")){
+                return m*45+40000;
+            }else if (trongtai.equals("1 Tấn")){
+                return m*45+40000;
+            }
+        }else if (loaixe.equals("Xe Bán Tải")){
+            return m*45+30000;
+        }else if (loaixe.equals("Xe 3 Gác")){
+            return m*30+25000;
+        }else if (loaixe.equals("Xe Máy")){
+            return m*20+20000;
+        }
+        return 1;
+    }
+
     private void evenlistview(){
         //listview tim thủ công
         lvSearch.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 dialogDetailBus.show();
+                SDTBUS(mangBus.get(position).iduser);
+                Locale locale = new Locale("en", "EN");
+                NumberFormat en = NumberFormat.getInstance(locale);
+                String str1 = en.format(TinhTien(mangBus.get(position).loaiXe,mangBus.get(position).trongtai,
+                        txtPhiVanChuyenSearch.getText().toString()));
+                txtChiPhiDialog.setText( str1+" VND"  );
+                txtloatxe1.setText(mangBus.get(position).loaiXe);
+                txttt1.setText(mangBus.get(position).trongtai);
                 txtIDBusDetaildialog.setText(mangBus.get(position).iduser);
                 txtNameBusDialog.setText(mangBus.get(position).Ten);
-                txtLocationBusDialog.setText(mangBus.get(position).Tinh+", "+mangBus.get(position).Quan+", "+mangBus.get(position).Phuong);
-                txtLoaiXeBusDialog.setText(mangBus.get(position).loaiXe);
-                txtTrongTaiBusDialog.setText(mangBus.get(position).trongtai);
-                txtSDTBusDialog.setText(sPhone);
+                txtLocationBusDialog.setText( mangBus.get(position).Phuong+", "+mangBus.get(position).Quan );
                 txtPointBusDialog.setText(mangBus.get(position).diem);
             }
         });
@@ -639,12 +760,17 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 dialogDetailBus.show();
+                SDTBUS(mangBus.get(position).iduser);
+                Locale locale = new Locale("en", "EN");
+                NumberFormat en = NumberFormat.getInstance(locale);
+                String str1 = en.format(TinhTien(mangBus.get(position).loaiXe,mangBus.get(position).trongtai,
+                        txtPhiVanChuyenSearch.getText().toString()));
+                txtChiPhiDialog.setText( str1+" VND"  );
+                txtloatxe1.setText(mangBus.get(position).loaiXe);
+                txttt1.setText(mangBus.get(position).trongtai);
                 txtIDBusDetaildialog.setText(mangBus.get(position).iduser);
                 txtNameBusDialog.setText(mangBus.get(position).Ten);
-                txtLocationBusDialog.setText(mangBus.get(position).Tinh+", "+mangBus.get(position).Quan+", "+mangBus.get(position).Phuong);
-                txtLoaiXeBusDialog.setText(mangBus.get(position).loaiXe);
-                txtTrongTaiBusDialog.setText(mangBus.get(position).trongtai);
-                txtSDTBusDialog.setText(sPhone);
+                txtLocationBusDialog.setText( mangBus.get(position).Phuong+", "+mangBus.get(position).Quan );
                 txtPointBusDialog.setText(mangBus.get(position).diem);
             }
         });
@@ -653,12 +779,17 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 dialogDetailBus.show();
+                SDTBUS(mangBus.get(position).iduser);
+                Locale locale = new Locale("en", "EN");
+                NumberFormat en = NumberFormat.getInstance(locale);
+                String str1 = en.format(TinhTien(mangBus.get(position).loaiXe,mangBus.get(position).trongtai,
+                        txtPhiVanChuyenSearch.getText().toString()));
+                txtChiPhiDialog.setText( str1+" VND"  );
+                txtloatxe1.setText(mangBus.get(position).loaiXe);
+                txttt1.setText(mangBus.get(position).trongtai);
                 txtIDBusDetaildialog.setText(mangBus.get(position).iduser);
                 txtNameBusDialog.setText(mangBus.get(position).Ten);
-                txtLocationBusDialog.setText(mangBus.get(position).Tinh+", "+mangBus.get(position).Quan+", "+mangBus.get(position).Phuong);
-                txtLoaiXeBusDialog.setText(mangBus.get(position).loaiXe);
-                txtTrongTaiBusDialog.setText(mangBus.get(position).trongtai);
-                txtSDTBusDialog.setText(sPhone);
+                txtLocationBusDialog.setText( mangBus.get(position).Phuong+", "+mangBus.get(position).Quan );
                 txtPointBusDialog.setText(mangBus.get(position).diem);
             }
         });
@@ -670,10 +801,12 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
         txtDetailLocationBegin = findViewById(R.id.txtDetailLocationBegin);
         txtDetailLocationVND = findViewById(R.id.txtDetailLocationVND);
         btEditLocationSearch = findViewById(R.id.btEditLocationSearch);
+        txtSDTTran = findViewById(R.id.txtSDTTran);
         LinearDetailLocation = findViewById(R.id.LinearDetailLocation);
         txtDetailBeginSearch = findViewById(R.id.txtDetailBeginSearch);
         txtDetailEndSearch = findViewById(R.id.txtDetailEndSearch);
         txtPhiVanChuyenSearch = findViewById(R.id.txtPhiVanChuyenSearch);
+        LinearEND = findViewById(R.id.LinearEND);
         LinearTransport = findViewById(R.id.LinearTransport);
         LinearAdd = findViewById(R.id.LinearAdd);
         LinearDetail = findViewById(R.id.LinearDetail);
@@ -1106,6 +1239,8 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
         mapTest = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.mapTestlocation);
         mapTest.getMapAsync(MainActivity.this);
+
+        mMap.setOnMyLocationClickListener(this);
         if (edtLocationEnd.getText().toString().equals("Vị trí hiện tại")){
         }
         if (edtLocationEnd.getText().toString().equals("") ) {
@@ -1171,12 +1306,14 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
                     btMyLocationBegin.setText("Hủy vị trí hiện tại");
                     edtLocationBegin.setText("Vị trí hiện tại");
                     LinearMapTestLocation.setVisibility(View.VISIBLE);
+
+
                     client.getLastLocation().addOnSuccessListener(MainActivity.this, new OnSuccessListener<Location>() {
                         @Override
                         public void onSuccess(Location location) {
-                            onMyLocationClick(location);
-                            T=new Timer();
-                            T.scheduleAtFixedRate(new TimerTask() {
+                             onMyLocationClick(location);
+                            final Timer TT=new Timer();
+                            TT.scheduleAtFixedRate(new TimerTask() {
                                 @Override
                                 public void run() {
                                     runOnUiThread(new Runnable()
@@ -1186,9 +1323,9 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
                                         {countime++;
                                             if (countime==2 ){
                                                 LatLng e = new LatLng(dMyLatitude,dMyLongitude);
-                                                mMapTest.animateCamera(CameraUpdateFactory.newLatLngZoom(e,15));
+                                                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(e,15));
                                                 countime=0;
-                                                T.cancel();
+                                                TT.cancel();
                                             }
                                         }
                                     });
@@ -1230,7 +1367,7 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
                                         {countime++;
                                             if (countime==2 ){
                                                 LatLng e = new LatLng(dMyLatitude,dMyLongitude );
-                                                mMapTest.animateCamera(CameraUpdateFactory.newLatLngZoom(e,15));
+                                                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(e,15));
                                                 countime=0;
                                                 T.cancel();
                                             }
@@ -1256,9 +1393,48 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
                 updateTransport( txtIDBusDetaildialog.getText().toString(),keyhistory+"","Đã hủy vận chuyển");
                 statusTranBus=false;
                 dstatus = false;
+                mdatafirebasex= FirebaseDatabase.getInstance().getReference().child("Bus").child(txtIDBusDetaildialog.getText().toString());
+                mdatafirebasex.addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        try {
+                            Bus a = dataSnapshot.getValue(Bus.class);
+                            Bus bus = new Bus(a.Phuong,a.Quan,a.Ten,a.Tinh,a.diem
+                                    ,a.iduser,a.loaiXe,a.soxe,"1",a.trongtai,a.viTrix,a.viTriy );
+                            mdatafiresetprofile.child("Bus/"+a.iduser).setValue(bus);
+                            mdatafirebasex.removeEventListener(this);
+                        }catch (Exception e){
+                            Toast.makeText(MainActivity.this, e+"", Toast.LENGTH_SHORT).show();
+                            mdatafirebasex.removeEventListener(this);
+                        }
+                    }
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                    }
+                });
                 Toast.makeText(this, "Đã hủy", Toast.LENGTH_SHORT).show();
                 LinearTransport.setVisibility(View.GONE);
-                LinearHome156.setVisibility(View.VISIBLE);
+                LinearEND.setVisibility(View.VISIBLE);
+                 final Timer Te=new Timer();
+               countimes = 0;
+                Te.scheduleAtFixedRate(new TimerTask() {
+                    @Override
+                    public void run() {
+                        runOnUiThread(new Runnable()
+                        {
+                            @Override
+                            public void run()
+                            {countimes++;
+                                 if (countimes==5){
+                                    LinearEND.setVisibility(View.GONE);
+                                    LinearHome156.setVisibility(View.VISIBLE);
+                                    Te.cancel();
+                                }
+                            }
+                        });
+                    }
+                }, 1000, 1000);
                 break;
             case R.id.btEditLocationSearch:
                /// code xác thực
@@ -1491,10 +1667,12 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
         currenMarker = mMap.addMarker(markerOptions);
         mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
         mMap.animateCamera(CameraUpdateFactory.zoomBy(100));
+
         if (clientgoogle != null){
-            LocationServices.FusedLocationApi.removeLocationUpdates(clientgoogle, (com.google.android.gms.location.LocationListener)  this);
+            LocationServices.FusedLocationApi.removeLocationUpdates(clientgoogle, (com.google.android.gms.location.LocationListener) MainActivity.this);
 
         }
+
     }
 
     @Override
@@ -1558,56 +1736,33 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
     // vị trí hiện tại
         return false;
     }
-// lấy tọa độ trên ggoogle maps
+
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        mMap = googleMap;
+        buildGoogle();
+        mMap.setMyLocationEnabled(true);
+        mMap.getUiSettings().setMyLocationButtonEnabled(true);
+
+        mMap.setOnMarkerDragListener(this);
+        mMap.setOnMarkerClickListener(this);
+        mMap.setOnMyLocationButtonClickListener(this);
+    }
+
+
+    protected synchronized void buildGoogle(){
+        clientgoogle= new GoogleApiClient.Builder(MainActivity.this)
+                .addConnectionCallbacks(MainActivity.this)
+                .addOnConnectionFailedListener(MainActivity.this)
+                .addApi(LocationServices.API)
+                .build();
+        clientgoogle.connect();
+    }
+
     @Override
     public void onMyLocationClick(@NonNull Location location) {
         dMyLatitude = location.getLatitude();
         dMyLongitude = location.getLongitude();
     }
-
-    @Override
-    public void onMapReady(GoogleMap googleMap) {
-        mMap = googleMap;
-
-        mMapTest = googleMap;
-        if (ContextCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION)== PackageManager.PERMISSION_GRANTED){
-            buildGoogle();
-            mMapTest.setMyLocationEnabled(true);
-            mMapTest.getUiSettings().setMyLocationButtonEnabled(true);
-        }
-        mMapTest.setOnMarkerDragListener(this);
-        mMapTest.setOnMarkerClickListener(this);
-        mMapTest.setOnMyLocationClickListener(this);
-        mMapTest.setOnMyLocationButtonClickListener(this);
-
-        /// tu dong luu vi trí lên firebase
-//        T.scheduleAtFixedRate(new TimerTask() {
-//            @Override
-//            public void run() {
-//                runOnUiThread(new Runnable()
-//                {
-//                    @Override
-//                    public void run()
-//                    { countime++;
-//                        client.getLastLocation().addOnSuccessListener( MainActivity.this, new OnSuccessListener<Location>() {
-//                            @Override
-//                            public void onSuccess(Location location) {
-////                                onMyLocationClick(location);
-//                            }
-//                        });
-//                    }
-//                });
-//            }
-//        }, 1000, 4000);
-    }
-
-
-    protected synchronized void buildGoogle(){
-        clientgoogle= new GoogleApiClient.Builder( this)
-                .addConnectionCallbacks( this)
-                .addOnConnectionFailedListener( this)
-                .addApi(LocationServices.API)
-                .build();
-        clientgoogle.connect();
-    }
+ 
 }

@@ -72,6 +72,22 @@
     </LinearLayout>
 
     <LinearLayout
+        android:id="@+id/LinearEND"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@+id/linearLayout"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <include
+            layout="@layout/layout_end"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </LinearLayout>
+    <LinearLayout
         android:id="@+id/LinearTransport"
         android:layout_width="match_parent"
         android:layout_height="0dp"

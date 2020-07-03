@@ -118,6 +118,29 @@
                     android:layout_marginRight="2dp"
                     android:layout_weight="1"
                     android:gravity="center|right"
+                    android:text="SĐT Tài xế: "
+                    android:textColor="#4D0101" />
+
+                <TextView
+                    android:id="@+id/txtSDTTran"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center|left"
+                    android:text="100000 VNĐ"
+                    android:textColor="#4D0101" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="35dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="300dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginRight="2dp"
+                    android:layout_weight="1"
+                    android:gravity="center|right"
                     android:text="Phí vận chuyển: "
                     android:textColor="#4D0101" />
 

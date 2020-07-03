@@ -1,6 +1,7 @@
 package com.google.append;
 
 import android.app.Fragment;
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
@@ -11,6 +12,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ScrollView;
@@ -40,7 +42,7 @@ public class FragmentUser extends Fragment  {
     EditText edtEditPhoneProfile,edtEditNameProfile;
     ArrayList<String> aBus;
     ArrayAdapter adapter = null;
-    DatabaseReference mdatafiregetbus ,mdatafiresetprofile;
+    DatabaseReference mdata ,mdatafiresetprofile;
     ConstraintLayout ConstraintLayoutdangkybus;
     static String sIDF;
     static String sEmailF;
@@ -57,6 +59,7 @@ public class FragmentUser extends Fragment  {
         //intent
 
         mdatafiresetprofile =FirebaseDatabase.getInstance().getReference();
+        mdata =FirebaseDatabase.getInstance().getReference();
         lvFUser= viewFragmentUser.findViewById(R.id.lvFUser);
         txtidf= viewFragmentUser.findViewById(R.id.txtidF);
         txtName= viewFragmentUser.findViewById(R.id.txtName);
@@ -81,30 +84,84 @@ public class FragmentUser extends Fragment  {
         //clickeven
         onlick();
         setProfile();
+        loadprofile(txtidf.getText().toString());
         return viewFragmentUser;
     }
-
+    private void getout(){
+        Intent intent = new Intent(getActivity(), Login.class);
+        startActivity(intent);
+    }
 
     private void setProfile() {
         MainActivity main = new MainActivity();
         txtidf.setText(main.sID);
-        txtName.setText(main.sName);
-        txtEmailDetailedProfile.setText(main.sEmail);
-        txtNameDetailedProfile.setText(main.sName);
-        txtPhoneDetailedProfile.setText(main.sPhone);
+
+
+    }
+    private  void loadprofile (String id){
+        mdatafiresetprofile= FirebaseDatabase.getInstance().getReference().child("profileuser").child(id);
+        mdatafiresetprofile.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                ProfileUser ac = dataSnapshot.getValue(ProfileUser.class);
+                txtName.setText(ac.Name);
+                txtEmailDetailedProfile.setText(ac.Email);
+                txtNameDetailedProfile.setText(ac.Name);
+                txtPhoneDetailedProfile.setText(ac.Phonenumber);
+                mdatafiresetprofile.removeEventListener(this);
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+
+        });
     }
 
     // EditProfile
 
     /// onlick
     public void onlick() {
+        imgbtlogout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                getout();
+            }
+        });
         btseteditprofile.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(getActivity(), txtidf.getText().toString()+"   1", Toast.LENGTH_SHORT).show();
-//                main.setPhoneUser(txtidf.getText().toString(),edtEditNameProfile.getText().toString()
-//                        ,txtEmailDetailedProfile.getText().toString(),
-//                        edtEditPhoneProfile.getText().toString(),"lick.com");
+                mdatafiresetprofile= FirebaseDatabase.getInstance().getReference().child("profileuser").child(txtidf.getText().toString());
+                mdatafiresetprofile.addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        ProfileUser ac = dataSnapshot.getValue(ProfileUser.class);
+                        if (!edtEditNameProfile.getText().toString().equals("")&&!edtEditPhoneProfile.getText().toString().equals("")){
+                            ProfileUser aec = new ProfileUser( "lick",ac.Email,edtEditNameProfile.getText().toString()
+                                    ,edtEditPhoneProfile.getText().toString());
+                            mdata.child("profileuser/"+txtidf.getText().toString()).setValue(aec);
+                        }else if(!edtEditNameProfile.getText().toString().equals("")&&edtEditPhoneProfile.getText().toString().equals("")){
+                            ProfileUser aec = new ProfileUser( "lick",ac.Email,edtEditNameProfile.getText().toString()
+                                    ,ac.Phonenumber);
+                            mdata.child("profileuser/"+txtidf.getText().toString()).setValue(aec);
+                        }else if (!edtEditPhoneProfile.getText().toString().equals("")&&edtEditNameProfile.getText().toString().equals("")){
+                            ProfileUser aec = new ProfileUser( "lick",ac.Email,ac.Email
+                                    ,edtEditPhoneProfile.getText().toString());
+                            mdata.child("profileuser/"+txtidf.getText().toString()).setValue(aec);
+                        } else {
+                            Toast.makeText(getActivity(), "Chưa nhập Thông tin", Toast.LENGTH_SHORT).show();
+                        }
+                        LinearEditProfile.setVisibility(View.GONE);
+                        m2 = 0;
+                        loadprofile(txtidf.getText().toString());
+                        mdatafiresetprofile.removeEventListener(this);
+                    }
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                    }
+
+                });
             }
         });
 
